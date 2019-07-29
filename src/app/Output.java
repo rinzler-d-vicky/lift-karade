@@ -1,6 +1,5 @@
 package app;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 import app.interfaces.Pausable;
