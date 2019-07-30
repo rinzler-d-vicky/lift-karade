@@ -5,6 +5,7 @@ public class App {
 		ElevatorController controller = new ElevatorController();
 		Output output = new Output();
 		InputScanner inputScanner = new InputScanner();
+		// GUI ui = new GUI();
 
 		inputScanner.onInterrupt(controller);
 		inputScanner.onInterrupt(output);
@@ -17,5 +18,6 @@ public class App {
 		controller.start();
 		inputScanner.start();
 		output.start();
+		// ui.render();
 	}
 }
