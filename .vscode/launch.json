@@ -2,6 +2,13 @@
 	"configurations": [
 		{
 			"type": "java",
+			"name": "CodeLens (Launch) - GUI",
+			"request": "launch",
+			"mainClass": "app.GUI",
+			"projectName": "elevator"
+		},
+		{
+			"type": "java",
 			"name": "CodeLens (Launch) - App",
 			"request": "launch",
 			"mainClass": "app.App",
