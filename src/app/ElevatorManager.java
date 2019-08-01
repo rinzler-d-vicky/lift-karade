@@ -10,12 +10,30 @@ public class ElevatorManager {
 	private int totalFloors = 0;
 	private int totalLifts = 0;
 	private ArrayList<Integer> commonFloors = new ArrayList<Integer>();
-	public int getTotalFloors(){ return totalFloors; }
-	public int getTotalLifts(){ return totalLifts; }
+
+	public int getTotalFloors() {
+		return totalFloors;
+	}
+
+	public int getTotalLifts() {
+		return totalLifts;
+	}
+
+	public ArrayList<Integer> getCommonFloors() {
+		return this.commonFloors;
+	}
 
 	private Scanner cin = new Scanner(System.in);
 
-	private void initialize() throws SQLException{
+	ElevatorManager() {
+		try {
+			this.initialize();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void initialize() throws SQLException {
 
 		ResultSet floorRS = Database.fetchResultSet("SELECT VALUE FROM L_OPTIONS WHERE NAME='FLOORS'");
 		this.totalFloors = Integer.parseInt(floorRS.getString(1));
@@ -25,18 +43,24 @@ public class ElevatorManager {
 		this.totalLifts = Integer.parseInt(liftsRS.getString(1));
 		liftsRS.close();
 
-		ResultSet commonFloorRS = Database.fetchResultSet("SELECT VALUE FROM L_OPTIONS WHERE NAME='LIFTS'");
-		String[] stringCommonFloor = commonFloorRS.getString(1).split(":");
-		for (String scf : stringCommonFloor) this.commonFloors.add(Integer.parseInt(scf));
+		ResultSet commonFloorRS = Database.fetchResultSet("SELECT VALUE FROM L_OPTIONS WHERE NAME='COMMON_FLOORS'");
+		String[] stringCommonFloor = commonFloorRS.getString(1).split(",");
+		this.commonFloors = new ArrayList<Integer>();
+		for (int i = 0; i < stringCommonFloor.length; i++) {
+			this.commonFloors.add(Integer.parseInt(stringCommonFloor[i]));
+		}
 		commonFloorRS.close();
 
 	}
 
-	public void start() throws SQLException{
+	public void start() throws SQLException {
 		this.initialize();
 
 		int option = -1;
 		do {
+			System.out.print("\033[H\033[2J");
+			System.out.flush();
+
 			System.out.println("Please Select and Option: ");
 			System.out.println("0. Start Lifts");
 			System.out.println("1. Set Lift Count");
@@ -81,16 +105,16 @@ public class ElevatorManager {
 					System.err.println("Incorrect Choice");
 					break;
 				}
-				cin.nextLine();				
+				cin.nextLine();
 			} catch (Exception e) {
 				System.err.println(e.getMessage());
 			}
 
-		} while (option!=0);
+		} while (option != 0);
 	}
 
 	private void skipMenu() throws SQLException {
-		if(this.getTotalLifts()==0){
+		if (this.getTotalLifts() == 0) {
 			System.err.println("Cannot Start system with 0 Lifts");
 			this.start();
 		}
@@ -119,9 +143,10 @@ public class ElevatorManager {
 	private void setCommonFloor() throws SQLException {
 		this.initialize();
 
-		System.out.println("The existing common floors are: ");
-		for (int floor : this.commonFloors) System.out.print(floor+ ", ");
-		System.out.println("Enter a floor number to make it common (between 0 and " + this.totalFloors + "):");
+		System.out.print("The existing common floors are: ");
+		for (int floor : this.commonFloors)
+			System.out.print(floor + ", ");
+		System.out.println("\nEnter a floor number to make it common (between 0 and " + this.totalFloors + "):");
 		int floor = cin.nextInt();
 		ElevatorController.SetCommonFloor(floor);
 
@@ -132,7 +157,8 @@ public class ElevatorManager {
 		this.initialize();
 
 		System.out.println("The existing common floors are: ");
-		for (int floor : this.commonFloors) System.out.print(floor+ ", ");
+		for (int floor : this.commonFloors)
+			System.out.print(floor + ", ");
 		System.out.println("Enter a floor number to remove it from common:");
 		int floor = cin.nextInt();
 		ElevatorController.UnsetCommonFloor(floor);
@@ -154,13 +180,13 @@ public class ElevatorManager {
 		for (int i = 0; i < fCount; i++) {
 			System.out.println("Enter Floor Number: ");
 			int f = cin.nextInt();
-			if(this.commonFloors.contains(f)){
+			if (this.commonFloors.contains(f)) {
 				System.err.println("This is a common floor, input ignored");
 				i--;
-			} else if (floors.contains(f)){
+			} else if (floors.contains(f)) {
 				System.err.println("This floor was already in input. input ignored");
 				i--;
-			}else {
+			} else {
 				floors.add(f);
 			}
 		}
@@ -170,21 +196,18 @@ public class ElevatorManager {
 		user.save();
 	}
 
-	private void listUsers(){
+	private void listUsers() {
 		ArrayList<User> users = User.List();
 		System.out.println("ID\t\tName\t\tCard\t\tFloor");
 		for (User user : users) {
-			System.out.print(
-				user.getId() + "\t\t" +
-				user.getName() + "\t\t" +
-				user.getCard() + "\t\t"
-			);
-			for (int floor : user.getFloors()) System.out.print(floor + ", ");
+			System.out.print(user.getId() + "\t\t" + user.getName() + "\t\t" + user.getCard() + "\t\t");
+			for (int floor : user.getFloors())
+				System.out.print(floor + ", ");
 			System.out.println("");
 		}
 	}
 
-	private void deleteUser(){
+	private void deleteUser() {
 		this.listUsers();
 		System.out.println("Enter User ID: ");
 		int id = cin.nextInt();
