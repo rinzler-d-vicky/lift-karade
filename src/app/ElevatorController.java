@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +22,7 @@ public class ElevatorController implements Runnable, Pausable {
 	private boolean paused = false;
 	private int liftCount = 0;
 
-	final public static int FLOOR_TRAVEL_TIME = 1000;
+	final public static int FLOOR_TRAVEL_TIME = 2000;
 	final public static int DOOR_OPEN_TIME = 500;
 	final public static int DOOR_CHANGING_TIME = 500;
 
@@ -57,7 +58,9 @@ public class ElevatorController implements Runnable, Pausable {
 			if (!this.isPaused()) {
 				try {
 					String command = App.Inputs.take();
-					this.input(command);
+					CompletableFuture.runAsync(()->{
+						this.input(command);
+					});
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					e.printStackTrace();

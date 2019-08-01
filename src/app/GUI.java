@@ -91,7 +91,7 @@ public class GUI implements Runnable{
 		gbc.gridx = 5;
 		gbc.gridy = 0;
 		gbc.gridwidth = 8;
-		// gbc.fill=GridBagConstraints.HORIZONTAL;
+		gbc.fill=GridBagConstraints.HORIZONTAL;
 		panel.add(textbox, gbc);
 
 		for (int i = 0; i < GUI.totalLifts; i++) {

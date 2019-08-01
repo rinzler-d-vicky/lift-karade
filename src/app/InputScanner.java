@@ -2,6 +2,8 @@ package app;
 
 import java.util.*;
 
+import org.apache.commons.collections4.queue.CircularFifoQueue;
+
 import app.interfaces.InputCallable;
 import app.interfaces.Pausable;
 
@@ -9,7 +11,7 @@ public class InputScanner implements Runnable, InputCallable{
 	final static char INTERRUPT_KEY = '.';
 	static Thread thread;
 
-	private Stack<String> callStack = new Stack<String>();
+	private Queue<String> callStack = new CircularFifoQueue<String>(10);
 	private boolean readyForInput = false;
 	private ArrayList<Pausable> toPause = new ArrayList<Pausable>();
 	private ArrayList<InputCallable> forInput = new ArrayList<InputCallable>();
@@ -57,13 +59,10 @@ public class InputScanner implements Runnable, InputCallable{
 	private void call(String i){
 		try {
 			App.Inputs.put(i);
-			callStack.push(i);
+			callStack.add(i);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		// for (InputCallable obj : this.forInput) {
-		// 	obj.input(i);
-		// }
 	}
 
 	@Override
