@@ -34,4 +34,17 @@ public class Database {
 		rs.next();
 		return rs;
 	}
+
+	public static void executeUpdate(String sql) throws SQLException {
+		Database.initialize();
+		Statement statement = Database.connection.createStatement();
+		statement.executeUpdate(sql);
+	}
+
+	public static void updateKeyValue(String key, String value) throws SQLException {
+		Connection conn = Database.getConnection();
+		String query = "UPDATE L_OPTIONS SET VALUE='" + value + "' WHERE NAME='"+key+"'";
+		Statement stmt = conn.createStatement();
+		stmt.executeUpdate(query);
+	}
 }

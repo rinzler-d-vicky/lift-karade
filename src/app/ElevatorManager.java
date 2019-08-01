@@ -67,9 +67,10 @@ public class ElevatorManager {
 			System.out.println("2. Set Floor Count");
 			System.out.println("3. Set Common Floor");
 			System.out.println("4. Delete Common Floor");
-			System.out.println("5. Add User");
-			System.out.println("6. Delete User");
-			System.out.println("7. List User");
+			System.out.println("5. List Common Floor");
+			System.out.println("6. Add User");
+			System.out.println("7. Delete User");
+			System.out.println("8. List User");
 
 			option = cin.nextInt();
 			System.out.print("\033[H\033[2J");
@@ -77,37 +78,41 @@ public class ElevatorManager {
 
 			try {
 				switch (option) {
-				case 0:
-					this.skipMenu();
-					break;
-				case 1:
-					this.setLiftCount();
-					break;
-				case 2:
-					this.setFloorCount();
-					break;
-				case 3:
-					this.setCommonFloor();
-					break;
-				case 4:
-					this.unsetCommonFloor();
-					break;
-				case 5:
-					this.addUser();
-					break;
-				case 6:
-					this.deleteUser();
-					break;
-				case 7:
-					this.listUsers();
-					break;
-				default:
-					System.err.println("Incorrect Choice");
-					break;
+					case 0:
+						this.skipMenu();
+						break;
+					case 1:
+						this.setLiftCount();
+						break;
+					case 2:
+						this.setFloorCount();
+						break;
+					case 3:
+						this.setCommonFloor();
+						break;
+					case 4:
+						this.unsetCommonFloor();
+						break;
+					case 5:
+						this.listCommonFloors();
+						break;
+					case 6:
+						this.addUser();
+						break;
+					case 7:
+						this.deleteUser();
+						break;
+					case 8:
+						this.listUsers();
+						cin.nextLine();
+						break;
+					default:
+						System.err.println("Incorrect Choice");
+						break;
 				}
 				cin.nextLine();
 			} catch (Exception e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 			}
 
 		} while (option != 0);
@@ -140,13 +145,19 @@ public class ElevatorManager {
 		this.initialize();
 	}
 
-	private void setCommonFloor() throws SQLException {
+	public void listCommonFloors() throws SQLException {
 		this.initialize();
 
 		System.out.print("The existing common floors are: ");
 		for (int floor : this.commonFloors)
 			System.out.print(floor + ", ");
-		System.out.println("\nEnter a floor number to make it common (between 0 and " + this.totalFloors + "):");
+		System.out.println("");
+		cin.nextLine();
+	}
+
+	private void setCommonFloor() throws SQLException {
+		this.listCommonFloors();
+		System.out.println("Enter a floor number to make it common (between 0 and " + this.totalFloors + "):");
 		int floor = cin.nextInt();
 		ElevatorController.SetCommonFloor(floor);
 
@@ -154,11 +165,7 @@ public class ElevatorManager {
 	}
 
 	private void unsetCommonFloor() throws SQLException {
-		this.initialize();
-
-		System.out.println("The existing common floors are: ");
-		for (int floor : this.commonFloors)
-			System.out.print(floor + ", ");
+		this.listCommonFloors();
 		System.out.println("Enter a floor number to remove it from common:");
 		int floor = cin.nextInt();
 		ElevatorController.UnsetCommonFloor(floor);
@@ -169,9 +176,10 @@ public class ElevatorManager {
 	private void addUser() throws SQLException {
 		this.initialize();
 
+		cin.nextLine();
 		System.out.println("Enter Client Name: ");
 		String name = cin.nextLine();
-		System.out.println("Enter Client Access Card Number");
+		System.out.println("Enter Client Access Card Number: ");
 		String card = cin.nextLine();
 
 		System.out.println("How many floors can he access (excluding common floor): ");
@@ -196,7 +204,7 @@ public class ElevatorManager {
 		user.save();
 	}
 
-	private void listUsers() {
+	private void listUsers() throws SQLException {
 		ArrayList<User> users = User.List();
 		System.out.println("ID\t\tName\t\tCard\t\tFloor");
 		for (User user : users) {
@@ -207,7 +215,7 @@ public class ElevatorManager {
 		}
 	}
 
-	private void deleteUser() {
+	private void deleteUser() throws SQLException {
 		this.listUsers();
 		System.out.println("Enter User ID: ");
 		int id = cin.nextInt();

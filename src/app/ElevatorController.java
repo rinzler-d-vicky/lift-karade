@@ -1,13 +1,13 @@
 package app;
 
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import app.interfaces.InputCallable;
 import app.interfaces.Pausable;
@@ -120,42 +120,49 @@ public class ElevatorController implements Runnable, Pausable, InputCallable {
 	public static void SetLiftCount(int count) throws SQLException {
 		if (count < 1)
 			throw new Error("Minimum Lifts should be 1");
-
-		Connection conn = Database.getConnection();
-		String query = "UPDATE L_OPTIONS SET VALUE='" + count + "' WHERE NAME='LIFTS'";
-		Statement stmt = conn.createStatement();
-		stmt.executeUpdate(query);
+		Database.updateKeyValue("LIFTS", count+"");
 	}
 
 	public static void SetFloorCount(int count) throws SQLException {
 
 		if (count <= 0)
 			throw new Error("Minimum floors should be 1");
-		Connection conn = Database.getConnection();
-		String query = "UPDATE L_OPTIONS SET VALUE='" + count + "' WHERE NAME='FLOORS'";
-		Statement stmt = conn.createStatement();
-		stmt.executeUpdate(query);
+		Database.updateKeyValue("FLOORS", count + "");
 	}
 
 	public static void SetCommonFloor(int floor) throws SQLException {
-		ElevatorManager elevatorManager = new ElevatorManager();
-		ArrayList<Integer> commonFloors = elevatorManager.getCommonFloors();
+		ElevatorManager em = new ElevatorManager();
+		ArrayList<Integer> commonFloors = em.getCommonFloors();
 
 		if (floor < 0)
 			throw new Error("Minimum Floor number should be 0");
-		if (floor > elevatorManager.getTotalFloors())
+		if (floor > em.getTotalFloors())
 			throw new Error("Floor number cannot be more than max");
 		if (commonFloors.contains(floor))
 			throw new Error("Floor is already a common floor");
 
 		commonFloors.add(floor);
 		Collections.sort(commonFloors);
-		// TODO: Merge
+		String finalCommonFloors = commonFloors.stream().map(Object::toString).collect(Collectors.joining(","));
+		Database.updateKeyValue("COMMON_FLOORS", finalCommonFloors + "");
 	}
 
-	public static void UnsetCommonFloor(int floor) {
-		// no neg
-		// must be in 0 - max floors
-		// warn if already in lift
+	public static void UnsetCommonFloor(int floor) throws SQLException {
+		ElevatorManager em = new ElevatorManager();
+		ArrayList<Integer> commonFloors = em.getCommonFloors();
+
+		if (floor < 0)
+			throw new Error("Minimum Floor number should be 0");
+		if (floor > em.getTotalFloors())
+			throw new Error("Floor number cannot be more than max");
+		if (!commonFloors.contains(floor))
+			throw new Error("Floor must be already a common floor");
+
+		int index = commonFloors.indexOf(floor);
+		commonFloors.remove(index);
+
+		Collections.sort(commonFloors);
+		String finalCommonFloors = commonFloors.stream().map(Object::toString).collect(Collectors.joining(","));
+		Database.updateKeyValue("COMMON_FLOORS", finalCommonFloors + "");
 	}
 }
