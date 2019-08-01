@@ -103,5 +103,7 @@ public class User {
 		} while (rs.next());
 		return userList;
 	}
+
+	public boolean isFloorAllowed(int floor){ return this.active && this.floors.contains(floor); }
     
 }

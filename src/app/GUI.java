@@ -9,7 +9,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.text.NumberFormat;
 
-public class GUI {
+public class GUI implements Runnable{
 	static int totalFloors = 0;
 	static int totalLifts = 0;
 
@@ -125,7 +125,7 @@ public class GUI {
 		return panel;
 	}
 
-	final public void start() {
+	final public void render() {
 
 		JPanel liftFloorPanel = this.getLiftFloorPanel();
 		JPanel liftInternalPanel = this.getLiftInternalPanel();
@@ -147,12 +147,26 @@ public class GUI {
 		});
 	}
 
+	static Thread thread;
+
+	public void start() {
+		if (thread == null) {
+			thread = new Thread(this);
+			thread.start();
+		}
+	}
+
 	public static void main(String[] args) {
 		GUI ui = new GUI();
 
 		ui.setTotalFloors(10);
 		ui.setTotalLifts(4);
 
-		ui.start();
+		ui.render();
+	}
+
+	@Override
+	public void run() {
+		this.render();
 	}
 }

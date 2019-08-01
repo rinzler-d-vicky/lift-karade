@@ -4,23 +4,30 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Stack;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import app.interfaces.InputCallable;
 import app.interfaces.Pausable;
 
 enum Direction {
-	UP, DOWN, STILL,
+	UP, DOWN, STILL, OPEN_DOOR, CLOSE_DOOR, OPEN,
 }
 
-public class ElevatorController implements Runnable, Pausable, InputCallable {
+public class ElevatorController implements Runnable, Pausable {
 	static Thread thread;
 	private boolean paused = false;
+	private int liftCount = 0;
 
-	public volatile HashMap<String, Elevator> elevators = new HashMap<String, Elevator>();
+	final public static int FLOOR_TRAVEL_TIME = 1000;
+	final public static int DOOR_OPEN_TIME = 500;
+	final public static int DOOR_CHANGING_TIME = 500;
 
-	private volatile Stack<String> callStack = new Stack<String>();
+	public HashMap<Integer, Elevator> elevators = new HashMap<Integer, Elevator>();
+
+	private int MaxFloors = 0;
 
 	public boolean loadFromDatabase() {
 		return true;
@@ -35,52 +42,95 @@ public class ElevatorController implements Runnable, Pausable, InputCallable {
 
 	@Override
 	public void run() {
+		ElevatorManager elevatorManager = new ElevatorManager();
+		this.liftCount = elevatorManager.getTotalLifts();
+		this.MaxFloors = elevatorManager.getTotalFloors();
+
+		for (int i = 1; i <= this.liftCount; i++) {
+			this.elevators.put(i, new Elevator(this.MaxFloors));
+		}
 		MainProcess();
 	}
 
 	private void MainProcess() {
-		if (!this.isPaused()) {
-			// TODO: Controller logic here
+		while(true){
+			if (!this.isPaused()) {
+				try {
+					String command = App.Inputs.take();
+					this.input(command);
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
-	// Pause all threads till input
 	public void pause() {
-
+		this.elevators.forEach((key, elevator)->{ elevator.pause(); });
 		this.paused = true;
 	}
-
+	
 	public boolean isPaused() {
 		return this.paused;
 	}
-
+	
 	public void play() {
+		this.elevators.forEach((key, elevator)->{ elevator.play(); });
 		this.paused = false;
 	}
 
-	public void callElevator(int floor, Direction direction) {
-		// TODO: outside call to elevator with direction
+	public void callElevator(int floor, Direction direction) throws InterruptedException {
+		HashMap<Integer, Integer> costs = new HashMap<Integer, Integer>();
+		ExecutorService es = Executors.newCachedThreadPool();
+		this.elevators.forEach((key, elevator) -> {
+			es.execute(new Runnable(){
+				@Override
+				public void run() {
+					costs.put(key, elevator.Cost(floor, direction));
+				}
+			});
+		});
+		es.shutdown();
+		es.awaitTermination(1, TimeUnit.MINUTES);
+
+		Entry<Integer, Integer> Minimum = null;
+		for (Entry<Integer, Integer> entry : costs.entrySet()) {
+			if(Minimum==null || Minimum.getValue() > entry.getValue() ){
+				Minimum = entry;
+			}
+		}
+		this.elevatorGoto(Minimum.getKey(), floor);
 	}
 
 	public void elevatorGoto(int lift, int floor) {
-		// TODO: inside call to the elevator to destination
+		try {
+			this.elevators.get(lift).InsideCall(floor);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
-	public void userGoto(int userId, int lift, int floor) {
-		// TODO: user is inside and tells elevator to go to destination
+	public void userGoto(int id, int lift, int floor) throws SQLException {
+		User user = new User(id);
+		if(user.isFloorAllowed(floor)) this.elevators.get(lift).InsideCall(floor);
+		else System.err.println("User#"+id+"("+user.getName()+") is not allowed to floor#"+floor);
 	}
 
-	@Override
 	public void input(String i) {
 		System.out.println("Got Input : " + i);
-		callStack.push(i);
 
 		String[] args = i.split(":");
 		switch (args[0]) {
 		case "call": {
 			Direction direction = args[1] == "down" ? Direction.DOWN : Direction.UP;
 			int floor = Integer.parseInt(args[2]);
-			this.callElevator(floor, direction);
+			try {
+				this.callElevator(floor, direction);
+			} catch (InterruptedException e) {
+				System.out.println("CALL failed");
+				e.printStackTrace();
+			}
 		}
 			break;
 		case "lift": {
@@ -93,7 +143,12 @@ public class ElevatorController implements Runnable, Pausable, InputCallable {
 			int userId = Integer.parseInt(args[1]);
 			int lift = Integer.parseInt(args[3]);
 			int floor = Integer.parseInt(args[5]);
-			this.userGoto(userId, lift, floor);
+			try {
+				this.userGoto(userId, lift, floor);
+			} catch (SQLException e) {
+				System.err.println("USER GOTO FAILED");
+				e.printStackTrace();
+			}
 		}
 			break;
 		default:
@@ -108,10 +163,10 @@ public class ElevatorController implements Runnable, Pausable, InputCallable {
 		if (this.elevators.size() == 0) {
 			str += "NO LIFTS IN THE SYSTEM";
 		} else {
+			for (Entry<Integer, Elevator> liftEntry : this.elevators.entrySet()) {
+				str += "Lift#" + liftEntry.getKey() + "\t" + liftEntry.getValue() + "\n";
+			}
 		}
-		str += "\n\nCall Stack:";
-		for (String call : callStack)
-			str += "\n" + call;
 		return str;
 	}
 
@@ -162,5 +217,12 @@ public class ElevatorController implements Runnable, Pausable, InputCallable {
 		Collections.sort(commonFloors);
 		String finalCommonFloors = commonFloors.stream().map(Object::toString).collect(Collectors.joining(","));
 		Database.updateKeyValue("COMMON_FLOORS", finalCommonFloors + "");
+	}
+
+	public static int Direction2Int(Direction _direction) {
+		if(_direction == Direction.STILL) return 0;
+		if(_direction == Direction.DOWN) return -1;
+		if(_direction == Direction.UP) return 1;
+		return 0;
 	}
 }

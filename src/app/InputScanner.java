@@ -5,10 +5,11 @@ import java.util.*;
 import app.interfaces.InputCallable;
 import app.interfaces.Pausable;
 
-public class InputScanner implements Runnable{
+public class InputScanner implements Runnable, InputCallable{
 	final static char INTERRUPT_KEY = '.';
 	static Thread thread;
 
+	private Stack<String> callStack = new Stack<String>();
 	private boolean readyForInput = false;
 	private ArrayList<Pausable> toPause = new ArrayList<Pausable>();
 	private ArrayList<InputCallable> forInput = new ArrayList<InputCallable>();
@@ -54,15 +55,32 @@ public class InputScanner implements Runnable{
 	}
 
 	private void call(String i){
-		for (InputCallable obj : this.forInput) {
-			obj.input(i);
+		try {
+			App.Inputs.put(i);
+			callStack.push(i);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		// for (InputCallable obj : this.forInput) {
+		// 	obj.input(i);
+		// }
 	}
 
 	@Override
 	public String toString(){
-		return this.readyForInput?
+		String str = "";
+		str += "\n\nCall Stack:";
+		for (String call : callStack)
+			str += "\n" + call;
+		str += "\n";
+		str += this.readyForInput?
 			"Please Enter the details as per format: "
 			:"Press '"+ InputScanner.INTERRUPT_KEY +"' to enter Input";
+		return str;
+	}
+
+	@Override
+	public void input(String i) {
+		this.call(i);
 	}
 }
