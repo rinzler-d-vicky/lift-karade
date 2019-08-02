@@ -3,9 +3,10 @@ package app;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-// import org.springframework.boot.SpringApplication;
-// import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class App {
 	public static BlockingQueue<String> Inputs = new LinkedBlockingQueue<String>();
 
@@ -36,6 +37,8 @@ public class App {
 			new Thread(inputScanner).start();
 			new Thread(output).start();
 			new Thread(ui).start();
+
+			SpringApplication.run(App.class, args);
 		} catch (Exception e) {
 			System.err.println("System Terminated");
 			e.printStackTrace();

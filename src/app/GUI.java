@@ -156,14 +156,14 @@ public class GUI implements Runnable{
 		}
 	}
 
-	public static void main(String[] args) {
-		GUI ui = new GUI();
+	// public static void main(String[] args) {
+	// 	GUI ui = new GUI();
 
-		ui.setTotalFloors(10);
-		ui.setTotalLifts(4);
+	// 	ui.setTotalFloors(10);
+	// 	ui.setTotalLifts(4);
 
-		ui.render();
-	}
+	// 	ui.render();
+	// }
 
 	@Override
 	public void run() {
