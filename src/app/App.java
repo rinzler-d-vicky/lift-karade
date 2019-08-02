@@ -33,10 +33,10 @@ public class App {
 			ui.setTotalFloors(manager.getTotalFloors());
 			ui.setTotalLifts(manager.getTotalLifts());
 
-			new Thread(controller).start();
-			new Thread(inputScanner).start();
-			new Thread(output).start();
-			new Thread(ui).start();
+			// new Thread(controller).start();
+			// new Thread(inputScanner).start();
+			// new Thread(output).start();
+			// new Thread(ui).start();
 
 			SpringApplication.run(App.class, args);
 		} catch (Exception e) {
